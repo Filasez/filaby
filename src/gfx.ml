@@ -4,6 +4,143 @@
  * You have permission to copy, modify, and redistribute under the
  * terms of the GPL-3.0. For full license terms, see gpl-3.0.txt.
  *)
+ 
+
+open Gtk
+open Gdk
+open GWindow
+
+
+(* Hilfsfunktion zum erstellen fettgeschriebener Labels*)
+let bold_label text packing =
+  let lbl = GMisc.label ~text ~packing () in
+  let font_desc = GPango.font_description_from_string "Sans Bold 10" in
+  lbl#misc#modify_font font_desc;
+  lbl
+
+
+(* Skaliert 8-Bit-Farbwerte auf 16-Bit für RGB *)
+let rgb255 r g b = `RGB (r * 257, g * 257, b * 257)
+
+(* Hexstring "#RRGGBB" → RGB. Beispiel: let color = hex "#ff6400" *)
+let hex s =
+  if String.length s <> 7 || s.[0] <> '#' then invalid_arg "hex";
+  let r = int_of_string ("0x" ^ String.sub s 1 2) in
+  let g = int_of_string ("0x" ^ String.sub s 3 2) in
+  let b = int_of_string ("0x" ^ String.sub s 5 2) in
+  rgb255 r g b
+
+
+(*Hilfsfunktion, um Vorder- und Hintergrundfarbe von Widgets zu ändern*)
+(*Beispiel: set_bg_fg window ~bg:(hex "#372f2d") ~fg:`NAME "white"*)
+let set_bg_fg widget ~bg ~fg =
+  widget#misc#modify_bg [`NORMAL, bg];
+  widget#misc#modify_fg [`NORMAL, fg]
+
+(* === Hilfsfunktion: Standard-Dokumenteordner finden === *)
+let get_default_documents_folder () =
+  let home = Sys.getenv_opt "HOME" in
+  match home with
+  | Some h ->
+      let candidates = [
+        Filename.concat h "Dokumente";  (* deutsch *)
+        Filename.concat h "Documents";  (* englisch *)
+      ] in
+      (match List.find_opt Sys.file_exists candidates with
+       | Some path -> path
+       | None -> h)
+  | None -> "."
+
+
+let chosen_programing_language = ref "unknown"
+
+(* === Hilfsfunktion: Standard-Dateiname aus Sprache und Datum === *)
+let make_current_name () =
+  (* aktuelles Datum *)
+  let open Unix in
+  let tm = localtime (time ()) in
+  let date =
+    Printf.sprintf "%04d-%02d-%02d"
+      (tm.tm_year + 1900)
+      (tm.tm_mon + 1)
+      tm.tm_mday
+  in
+  let time =
+  Printf.sprintf "%02d-%02d-%02d"
+    tm.tm_hour tm.tm_min tm.tm_sec
+  in
+  (* Dateiname zusammenbauen *)
+  Printf.sprintf "laby_%s_%s_%s.txt" !chosen_programing_language date time
+
+
+(* === Save-Funktion mit Dialog === *)
+let save_file (view_prog : GSourceView3.source_view) =
+  (* Versuche, ein Dokumente-Verzeichnis des Benutzers zu finden *)
+  let home = Sys.getenv_opt "HOME" in
+  let default_folder = get_default_documents_folder () in
+  let dialog = GWindow.file_chooser_dialog
+    ~action:`SAVE
+    ~title:"Save your Laby source code as text file"
+    ()
+  in
+  ignore (dialog#add_button "Cancel" `CANCEL);
+  ignore (dialog#add_button "Save" `SAVE);
+
+  (* Setze Standardordner und Dateiname *)
+  dialog#set_current_folder default_folder;
+  dialog#set_current_name (make_current_name());
+
+  (match dialog#run () with
+   | `SAVE ->
+       (match dialog#filename with
+        | Some filename ->
+            let buffer = view_prog#source_buffer in
+            let start_iter = buffer#start_iter in
+            let end_iter = buffer#end_iter in
+            let text = buffer#get_text ~start:start_iter ~stop:end_iter () in
+            (try
+               let oc = open_out filename in
+               output_string oc text;
+               close_out oc;
+               print_endline ("Saved to " ^ filename)
+             with Sys_error msg ->
+               prerr_endline ("Save failed: " ^ msg))
+        | None -> ())
+   | _ -> ());
+  dialog#destroy ()
+
+
+
+(* === Open-Funktion mit Dialog === *)
+let open_file (view_prog : GSourceView3.source_view) =
+  (* Versuche, ein Dokumente-Verzeichnis des Benutzers zu finden *)
+  let home = Sys.getenv_opt "HOME" in
+  let default_folder = get_default_documents_folder () in
+  let dialog = GWindow.file_chooser_dialog
+    ~action:`OPEN
+    ~title:"Open Laby source code"
+    ()
+  in
+  ignore (dialog#add_button "Cancel" `CANCEL);
+  ignore (dialog#add_button "Open" `OPEN);
+  dialog#set_current_folder default_folder;
+
+  (* try ... with ... sorgt dafür, dass der Dialog immer zerstört wird *)
+  (try
+     match dialog#run () with
+     | `OPEN ->
+         (match dialog#filename with
+          | Some filename ->
+              let ic = open_in filename in
+              let len = in_channel_length ic in
+              let text = really_input_string ic len in
+              close_in ic;
+              view_prog#buffer#set_text text
+          | None -> ())
+     | _ -> ()
+   with _ -> ());
+  dialog#destroy ()
+
 
 let log = Log.make ["gfx"]
 
@@ -12,32 +149,38 @@ let conf =
     (F.x "graphic interface configuration" [])
 
 let conf_tilesize =
-  Conf.int ~p:(conf#plug "tile-size") ~d:40
+  Conf.int ~p:(conf#plug "tile-size") ~d:55
     (F.x "size of tiles in pixels" [])
 
 let conf_playback_rate =
-  Conf.float ~p:(conf#plug "playback-rate") ~d:2.0
+  Conf.float ~p:(conf#plug "playback-rate") ~d:2.5
     (F.x "number of iterations per second" [])
 
 let conf_cue_rate =
-  Conf.float ~p:(conf#plug "cue-rate") ~d:10.0
+  Conf.float ~p:(conf#plug "cue-rate") ~d:30.0
     (F.x "number of iterations per second in fast-forward/rewind mode" [])
 
 let conf_source_style =
-  Conf.string ~p:(conf#plug "source-style") ~d:"classic"
+  Conf.string ~p:(conf#plug "source-style") ~d:"laby_theme"
     (F.x "highlighting style to use for source code" [])
 
 let conf_window =
   Conf.void ~p:(conf#plug "window")
     (F.x "initial window geometry" [])
 
+
+(*
 let conf_window_width =
-  Conf.int ~p:(conf_window#plug "width") ~d:800
+  Conf.int ~p:(conf_window#plug "width") ~d:600
     (F.x "width of window" [])
 
+
 let conf_window_height =
-  Conf.int ~p:(conf_window#plug "height") ~d:600
+  Conf.int ~p:(conf_window#plug "height") ~d:900
     (F.x "height of window" [])
+
+
+*)
 
 exception Error of F.t
 
@@ -63,6 +206,7 @@ type controls =
       start_vbox: GPack.box;
       start_image: GMisc.image;
       main_hpaned: GPack.paned;
+      (* left_paned: GPack.paned; *)
       menu_quit: GMenu.menu_item;
       menu_home: GMenu.menu_item;
       menu_level: GMenu.menu_item;
@@ -124,10 +268,12 @@ let gtk_init () =
     let file = Res.get ["tiles"; p ^ ".svg"] in
     begin try
       GdkPixbuf.from_file_at_size file tile_size tile_size
+
     with
     | GdkPixbuf.GdkPixbufError(GdkPixbuf.ERROR_UNKNOWN_TYPE, _) ->
 	let file = Res.get ["tiles"; p ^ ".png"] in
 	GdkPixbuf.from_file_at_size file tile_size tile_size
+
     end
   in
   {
@@ -199,14 +345,40 @@ let label_mesg = F.x "Messages:" []
 let label_help = F.x "Help:" []
 let label_start = F.x "Start" []
 
+
 let layout languages =
   let scrolled ?(vpolicy=`ALWAYS) packing =
     GBin.scrolled_window ~packing ~hpolicy:`AUTOMATIC ~vpolicy ()
   in
   let monofont = GPango.font_description_from_string "monospace" in
-  let window = GWindow.window ~resizable:true () in
+  let window = GWindow.window ~resizable:true ~title:"Modified Laby" () in
+  window#maximize ();
+  
+  (* --- Eigene Fensterfarben erstellen mit Lablgtk2 --- *)
+  (*Erfundene Bodenfarbe: #372f2d --> RGB: RGB(55,47,45) *)
+	let color_w_bg = hex "#372f2d" in
+	window#misc#modify_bg [`NORMAL, color_w_bg];
+	window#misc#modify_fg [`NORMAL, `NAME "white"];
+
   let windowbox = GPack.vbox ~packing:window#add () in
+  
+  (*Farbe der Windowbox ändern*)
+  (*Das betrifft die Farben dieser Fenster: Menu-Leiste, Programmierfenster-Leiste, Tool-Leiste, Nachrichtenfenster-Leiste*)
+  (*
+  let color_wb_bg = `NAME "darkslategray" in
+	let color_wb_fg = `NAME "white" in
+
+	windowbox#misc#modify_bg [`NORMAL, color_wb_bg];
+	windowbox#misc#modify_fg [`NORMAL, color_wb_fg];
+  *)
+  
   let menu_bar = GMenu.menu_bar ~packing:windowbox#pack () in
+
+  (*Farbe der Menu-Leiste ändern. Mauerfarbe: #ff6400 -> RBG(255,100,0). Steinfarbe: #5c4f4b -> RGB(92,79,75) *)
+	let color_menu_bg = hex "#ff6400" in
+	menu_bar#misc#modify_bg [`NORMAL, color_menu_bg];
+	menu_bar#misc#modify_fg [`NORMAL, `NAME "black"];
+
   let menu_levels = GMenu.menu () in
   let sub_main = GMenu.menu () in
   let menu_main = GMenu.menu_item ~label:(Fd.render_raw label_menu)
@@ -221,6 +393,8 @@ let layout languages =
     ~packing:sub_main#append () in
   let menu_home = GMenu.menu_item ~label:"Home"
     ~packing:sub_main#append () in
+
+
   let fullscreen () =
     menu_fullscreen#misc#hide ();
     menu_unfullscreen#misc#show ();
@@ -240,6 +414,15 @@ let layout languages =
   (* Start-up screen *)
   let start_vbox = GPack.vbox ~packing:main_vbox#add
     ~spacing:10 ~border_width:25 () in
+  (*
+  (*Farbe des Start-Fensters ändern*)(* bräunliches hellgrün: #b8c28e -> RGB(184,194,142) *)
+
+	let color_svb_bg = hex "#b8c28e" in
+	let color_svb_fg = `NAME "black" in
+
+	start_vbox#misc#modify_bg [`NORMAL, color_svb_bg];
+	start_vbox#misc#modify_fg [`NORMAL, color_svb_fg];
+  *)
   let start_image = GMisc.image ~packing:start_vbox#add () in
   let mstart_vbox = GPack.vbox ~packing:start_vbox#pack () in
   let _ = GMisc.label ~markup:(Fd.render_raw label_welcome)
@@ -250,26 +433,135 @@ let layout languages =
   let button_start = GButton.button ~packing:mstart_vbox#pack
     ~label:(Fd.render_raw label_start) () in
 
+	(* Fokus direkt auf Start-Button setzen *)
+	button_start#misc#grab_focus ();
+
   (* Game screen *)
   let hpaned = GPack.paned `HORIZONTAL ~packing:main_vbox#add () in
   let tile_size = max 5 conf_tilesize#get in
-  hpaned#set_position (80 + 550 * tile_size / 40);
-  let lvbox = GPack.vbox ~packing:hpaned#add1 () in
+  hpaned#set_position (10 + 550 * tile_size / 40);
+
+  let left_paned = GPack.paned `VERTICAL ~packing:hpaned#add () in
+  (* let screen_height = Gdk.Screen.height () in *)
+  left_paned#set_position(Gdk.Screen.height ()*5/8);
+
+  (* ignore (
+    left_paned#misc#connect#size_allocate ~callback:(fun _ ->
+      let alloc = left_paned#misc#allocation in
+     left_paned#set_position (alloc.Gtk.height*3 / 4);
+     ()
+    )
+  ); *)
+
+  (* ignore (
+  GMain.Idle.add (fun () ->
+    let alloc = left_paned#misc#allocation in
+    left_paned#set_position (alloc.Gtk.height * 2 / 3);
+    false
+  )
+); *)
+
+
+  (* let total_height = conf_window_height#get in
+  left_paned#set_position (total_height / 2); *)
+
+  let lvbox = GPack.vbox ~packing:left_paned#add () in
+
+
+
+  (*
+  (*Farbe des Level-Fensters ändern*)(* bräunliches hellgrün: #b8c28e -> RGB(184,194,142)*)
+
+	let color_lvb_bg = hex "#b8c28e" in
+	let color_lvb_fg = `NAME "black" in
+
+	lvbox#misc#modify_bg [`NORMAL, color_lvb_bg];
+	lvbox#misc#modify_fg [`NORMAL, color_lvb_fg];
+  *)
   let vpaned = GPack.paned `VERTICAL ~packing:hpaned#add () in
-  vpaned#set_position 400;
-  let view_title = label lvbox#pack in
+
+  ignore (GMain.Idle.add (fun () ->
+    vpaned#set_position (Gdk.Screen.height () * 3 / 4);
+    false
+  ));
+
+
+  (* vpaned#set_position (Gdk.Screen.height ()*5/6); *)
+  
+  (*let view_title = label lvbox#pack *)
+  let view_title = bold_label "" lvbox#pack in
   let view_comment = label lvbox#pack in
   let sw_laby = scrolled ~vpolicy:`AUTOMATIC lvbox#add in
-  let box_help = GPack.vbox ~packing:lvbox#pack () in
-  label_txt (Fd.render_raw label_help) box_help#pack;
-  let sw_help = scrolled box_help#pack in
-  let view_help =
-    GSourceView3.source_view ~height:100 ~editable:false ~packing:sw_help#add ()
+  
+
+  (*Box-help used to be here*)
+
+    let mesg_box = GPack.vbox ~packing:left_paned#add () in
+
+  (*Farbe der Leiste über dem Nachrichtenfenster ändern. Mauerfarbe: #ff6400 -> RBG(255,100,0). Steinfarbe: #5c4f4b -> RGB(92,79,75)*)
+  (* EventBox für den Hintergrund *)
+	let eb_mesg = GBin.event_box ~packing:mesg_box#pack () in
+	let color_eb_mesg_bg = hex "#ff6400" in
+	eb_mesg#misc#modify_bg [`NORMAL, color_eb_mesg_bg];
+
+	(* Nichtfettes Label aus F.t erstellen *)
+	(* let label_mesg_widget = GMisc.label ~text:(Fd.render_raw label_mesg) () in
+
+  (*Fettes Label erstellen*)
+	eb_mesg#add (label_mesg_widget :> GObj.widget); *)
+  let label_mesg_widget = bold_label (Fd.render_raw label_mesg) eb_mesg#add in
+	label_mesg_widget#misc#modify_fg [`NORMAL, `NAME "black"];
+  
+  (*Code für nichtfettes Label*)
+  (*label_txt (Fd.render_raw label_mesg) rbvbox#pack;*)
+  
+  (* let sw_mesg = scrolled mesg_box#pack in
+  let view_mesg = GText.view ~editable:false ~packing:sw_mesg#add  () in *)
+  let sw_mesg = GBin.scrolled_window
+  ~hpolicy:`AUTOMATIC ~vpolicy:`AUTOMATIC ()
   in
-  view_help#set_indent 1;
-  view_help#misc#modify_font monofont;
+  mesg_box#pack ~expand:true ~fill:true (sw_mesg :> GObj.widget);
+
+  let view_mesg = GText.view ~editable:false ~packing:sw_mesg#add () in
+
+  view_mesg#misc#modify_font monofont;
+
+  view_mesg#set_left_margin 10;
+  view_mesg#set_right_margin 6;
+  view_mesg#set_pixels_above_lines 5;
+  view_mesg#set_pixels_below_lines 2;
+
+
+
+  (*Rechte Seite. Enthält: Programmierfenster, Toolbar, Nachrichtenfenster*)
   let rtvbox = GPack.vbox ~packing:vpaned#add1 () in
-  label_txt (Fd.render_raw label_prog) rtvbox#pack;
+  
+  (*Farbe der Rtv-Box ändern. Betrifft: Programmierfenster-Leiste, Tool-Leiste*)
+  (* Mauerfarbe: #ff6400 -> RGB(255,100,0). Steinfarbe: #5c4f4b -> RGB(92,79,75). Bräunliches hellgrün: #b8c28e -> RGB(184,194,142)*)
+	let color_rtvb_bg = hex "#ff6400" in
+	rtvbox#misc#modify_bg [`NORMAL, color_rtvb_bg];
+	rtvbox#misc#modify_fg [`NORMAL, `NAME "black"];
+  
+  (*
+  (*Farbe der Leiste über dem Programmierfenster ändern. Mauerfarbe: #ff6400 -> RBG(255,100,0). Steinfarbe: #5c4f4b -> RGB(92,79,75)*)
+  (* EventBox für den Hintergrund *)
+	let eb_prog = GBin.event_box ~packing:rtvbox#pack () in
+
+	let color_eb_prog_bg = hex "#ff6400" in
+	eb_prog#misc#modify_bg [`NORMAL, color_eb_prog_bg];
+
+	(* Label aus F.t erstellen *)
+	let label_prog_widget = GMisc.label ~text:(Fd.render_raw label_prog) () in
+	eb_prog#add (label_prog_widget :> GObj.widget);
+	label_prog_widget#misc#modify_fg [`NORMAL, `NAME "black"];
+	*)
+	
+	(*Ohne Farbänderung der Leiste über dem Programmierfenster, die folgende Zeile ausführen lassen. Sonst nicht.*)
+
+  (* Nicht fett geschriebene Labels*)
+  (* label_txt (Fd.render_raw label_prog) rtvbox#pack; *)
+  ignore (bold_label (Fd.render_raw label_prog) rtvbox#pack);
+  
   let sw_prog = scrolled rtvbox#add in
   let view_prog =
     GSourceView3.source_view
@@ -277,10 +569,66 @@ let layout languages =
       ~show_line_numbers:true ~packing:sw_prog#add ()
   in
   view_prog#set_indent 1;
-  view_prog#misc#modify_font monofont;
+  
+  let font = GPango.font_description_from_string "Ubuntu Mono 11" in
+	view_prog#misc#modify_font font;
+
+
+  (*view_prog#misc#modify_font monofont;*)
+  
+  (*Hintergrundfarbe des Programmierfensters ändern *)
+  (*view_prog#misc#modify_bg [`NORMAL, `BLACK];*)
+  (*Leider wird die farbige Umrandung markierten Textes (Highlight-Farbe) so nicht mehr angezeigt.*)
+
+  (*Die Menu-Items für's Speichern und Öffnen sind hier definiert, da es um den Inhalt des Programmierfensters geht.*)
+  let save_item = GMenu.menu_item ~label:"Save" ~packing:sub_main#append () in
+  save_item#connect#activate ~callback:(fun () -> save_file view_prog);
+
+  let open_item = GMenu.menu_item ~label:"Open" ~packing:sub_main#append () in
+  open_item#connect#activate ~callback:(fun () -> open_file view_prog);
+
+
+  
   let bbox = GPack.hbox ~packing:rtvbox#pack () in
+  (*
+  (*Farbe der B-Box ändern. Betrifft: Tool-Leiste. Mauerfarbe: #ff6400 -> RBG(255,100,0). Steinfarbe: #5c4f4b -> RGB(92,79,75)*)
+
+	let color_bb_bg = hex "#ff6400" in
+	bbox#misc#modify_bg [`NORMAL, color_bb_bg];
+	bbox#misc#modify_fg [`NORMAL, `NAME "black"];
+  *)
   let button_execute = GButton.button ~packing:bbox#pack ~stock:`EXECUTE () in
-  let rbvbox = GPack.vbox ~packing:vpaned#add2 () in
+  (* let rbvbox = GPack.vbox ~packing:vpaned#add2 () in *)
+
+  let box_help = GPack.vbox ~packing:vpaned#add2 () in
+
+  (*Farbe der Hilfe-Leiste ändern. Mauerfarbe: #ff6400 -> RBG(255,100,0). Steinfarbe: #5c4f4b -> RGB(92,79,75) *)
+  (* EventBox für den Hintergrund *)
+  let eb_help = GBin.event_box ~packing:box_help#pack () in
+  let color_eb_help_bg = hex "#ff6400" in
+  eb_help#misc#modify_bg [`NORMAL, color_eb_help_bg];
+
+  let label_help_widget = bold_label (Fd.render_raw label_help) eb_help#add in
+	label_help_widget#misc#modify_fg [`NORMAL, `NAME "black"];
+
+  (*Ursprünglicher Code ohne Farbänderung der Hilfe-Leiste:*)
+  (* label_txt (Fd.render_raw label_help) box_help#pack; *)
+
+  let sw_help = GBin.scrolled_window
+  ~hpolicy:`AUTOMATIC ~vpolicy:`AUTOMATIC ()
+  in
+  box_help#pack ~expand:true ~fill:true (sw_help :> GObj.widget);
+  
+  (* let sw_help = scrolled box_help#pack in *)
+  let view_help =
+    GSourceView3.source_view ~editable:false ~packing:sw_help#add ()
+    (* GSourceView3.source_view ~height:500 ~editable:false ~packing:sw_help#add () *)
+  in
+  (* sw_help#add ~editable:false (view_help :> GObj.widget); *)
+
+  view_help#set_indent 1;
+  view_help#misc#modify_font monofont;
+
   let toolbar = GButton.toolbar ~packing:bbox#pack () in
   let button stock = GButton.tool_button ~packing:toolbar#insert ~stock () in
   let tbutton stock =
@@ -291,11 +639,16 @@ let layout languages =
   let button_play = tbutton `MEDIA_PLAY in
   let button_next = button `GO_FORWARD in
   let button_forward = tbutton `MEDIA_FORWARD in
-  view_prog#misc#grab_focus ();
-  label_txt (Fd.render_raw label_mesg) rbvbox#pack;
-  let sw_mesg = scrolled rbvbox#add in
-  let view_mesg = GText.view ~editable:false ~packing:sw_mesg#add  () in
-  view_mesg#misc#modify_font monofont;
+  (* view_prog#misc#grab_focus (); *)
+  
+  
+
+
+  (*eb_mesg and sw_mesg used to be here*)
+
+
+
+
   let map_image = GMisc.image ~packing:sw_laby#add_with_viewport () in
   button_execute#set_focus_on_click false;
   {
@@ -321,6 +674,8 @@ let layout languages =
 let make_pixbuf tile_size level =
   let sizex, sizey = Level.size level in
   let width, height = tile_size * (1 + sizex), tile_size * (1 + sizey) in
+  (* let width = (Gdk.Screen.width ()/3) in
+  let height = (width*sizey/sizex) in *)
   GdkPixbuf.create ~width ~height ~has_alpha:true ()
 
 
@@ -341,6 +696,7 @@ let display_gtk ressources =
   );
 
   let c = layout language_list in
+
   let level_load name =
     let l = Level.load (Res.get ["levels"; name]) in
     c.map_image#set_pixbuf (make_pixbuf ressources.size l); l
@@ -352,8 +708,19 @@ let display_gtk ressources =
   let style = ssm#style_scheme conf_source_style#get in
   c.view_prog#source_buffer#set_style_scheme style;
   c.view_help#source_buffer#set_style_scheme style;
+  
+  (*Versuch Fensterfarbe zu ändern wird ignoriert, wenn mit Style-Scheme gearbeitet wird.*)
+  (*
+  c.view_prog#misc#modify_base [`NORMAL, `NAME "#000000"];
+	c.view_prog#misc#modify_text [`NORMAL, `NAME "#ffffff"];
+
+	c.view_help#misc#modify_base [`NORMAL, `NAME "#000000"];
+	c.view_help#misc#modify_text [`NORMAL, `NAME "#ffffff"];
+	*)
+  
   let slm = GSourceView3.source_language_manager false in
   add_search_path slm [syntaxd; Res.path [syntaxd; "language-specs"]];
+
 
   (* gui outputs *)
   let msg str =
@@ -437,6 +804,7 @@ let display_gtk ressources =
       with _ -> None
     with
       | Some name ->
+        chosen_programing_language := name;
 	 let lmod = List.find (fun x -> x#name = name) mods in
 	 c.view_prog#buffer#set_text (command#chg_mod lmod);
 	 let l = slm#language name in
@@ -446,6 +814,7 @@ let display_gtk ressources =
 	      "name", F.string name;
 	    ]
 	  );
+    
 	 c.view_prog#source_buffer#set_language l;
 	 c.view_help#source_buffer#set_language l;
       | None -> ()
@@ -540,8 +909,12 @@ let display_gtk ressources =
   (* now we must have everything up *)
   setupmod ();
   exit_play ();
-  c.window#set_default_size conf_window_width#get conf_window_height#get;
+  c.window#maximize ();
+  (*c.window#set_default_size conf_window_width#get conf_window_height#get;*)
   c.window#show ();
+
+  
+
   if List.mem "0.laby" levels_list
   then newlevel "0.laby"
   else if levels_list <> [] then newlevel (List.hd levels_list);

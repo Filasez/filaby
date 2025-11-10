@@ -32,7 +32,7 @@ let sys_lang =
   end
 
 let conf_lang =
-  Conf.string ~p:(conf#plug "lang") ~d:sys_lang
+  Conf.string ~p:(conf#plug "lang") ~d:"de"
     (F.x "language" [])
 
 let line_regexp =

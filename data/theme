@@ -10,6 +10,8 @@ list	format-quoted		:#333
 list	format-label		:#555
 list	format-msg-unknown	:##200
 list	format-msg-bad		:##200
+list	format-comment      :#344
+
 
 list	opt-option		:#055
 

@@ -31,7 +31,7 @@ let conf_data =
 
 let conf_data_dirs =
   Conf.list
-    ~p:(conf_data#plug "dirs") ~d:[]
+    ~p:(conf_data#plug "dirs") ~d:["/home/filasez/Programme/filaby/data"]
     (F.x "data paths" [])
 
 let conf_bin =

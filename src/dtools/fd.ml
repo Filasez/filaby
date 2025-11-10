@@ -9,6 +9,23 @@
    @author Stéphane Gimenez
 *)
 
+(* print_endline (Sys.getenv "TERM") *)
+
+(* Bewirkt Ausgabe "Term not set" in laby_debug.txt, wenn man Laby über die .desktop-datei startet *)
+(* Bewirkt Ausgabe "xterm-256color" in laby_debug.txt, wenn man Laby über die Konsole startet*)
+
+let () =
+  let oc = open_out "/home/filasez/Programme/ocaml test/laby_debug.txt" in
+  let term = match Sys.getenv_opt "TERM" with
+    | Some v -> v
+    | None -> "TERM not set"
+  in
+  output_string oc term;
+  close_out oc
+
+
+
+
 let conf_tags =
   Conf.void (F.x "theme" [])
 
@@ -17,7 +34,9 @@ let texts : (string * string, string * ((string * F.t) list -> F.t)) Hashtbl.t =
 
 let env_term =
   begin try Some (Sys.getenv "TERM") with Not_found -> None end
-
+  (*
+print_endline (Sys.getenv "TERM");;
+*)
 let escape =
   begin match env_term with
   | Some ("xterm" | "xterm-color"
@@ -46,16 +65,20 @@ let codes =
     ""
   in
   begin function
+  (*
   | "" -> ""
   | "bold" -> "01" | "italic" -> "03" | "underline" -> "04"
   | "#black" -> "30" | "##black" -> "40"
   | "#red" -> "31" | "##red" -> "41"
   | "#green" -> "32" | "##green" -> "42"
   | "#yellow" -> "33" | "##yellow" -> "43"
-  | "#blue" -> "34" | "##blue" -> "44"
+(*  | "#blue" -> "34" | "##blue" -> "44" *)
+  | "#blue" -> "94" | "##blue" -> "94"
   | "#purple" -> "35" | "##purple" -> "45"
   | "#cyan" -> "36" | "##cyan" -> "46"
   | "#white" -> "37" | "##white" -> "47"
+  
+  *)
   | str when str.[0] = '#' ->
       if String.length str = 4 &&
 	is_digit str.[1] && is_digit str.[2] && is_digit str.[3]

@@ -12,7 +12,7 @@ let conf =
     (F.x "mods configuration" [])
 
 let conf_selected =
-  Conf.string ~p:(conf#plug "selected") ~d:"ocaml"
+  Conf.string ~p:(conf#plug "selected") ~d:"c"
     (F.x "select a specific programming mod" [])
 
 let conf_exclusive =

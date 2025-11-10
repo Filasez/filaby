@@ -1,7 +1,7 @@
 #int	gfx.tile-size                  :40
 #int	gfx.window.width               :640
 #int	gfx.window.height              :480
-#string	gfx.source-style               :classic
+#string	gfx.source-style               :gtk
 #string	mod.selected                   :ocaml
 #bool	mod.exclusive                  :false
 #bool	mod.translation                :true

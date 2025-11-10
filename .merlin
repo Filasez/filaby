@@ -1,0 +1,7 @@
+B _build
+B +lablgtk3
+B +lablgtk3-sourceview3
+S src
+FLG -I /home/filasez/.opam/4.14.0/lib/ocaml
+FLG -I /home/filasez/.opam/4.14.0/lib/lablgtk3
+FLG -I /home/filasez/.opam/4.14.0/lib/lablgtk3-sourceview3
