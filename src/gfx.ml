@@ -810,6 +810,21 @@ let display_gtk ressources =
         chosen_programing_language := name;
 	 let lmod = List.find (fun x -> x#name = name) mods in
 	 c.view_prog#buffer#set_text (command#chg_mod lmod);
+
+(* -- Cursor auf erstes Vorkommen von "entkommen" setzen -- *)
+let buf = c.view_prog#buffer in
+let text = buf#get_text () in
+let target = "entkommen" in
+let () =
+  match String.index_opt text target.[0] with
+  | Some i
+    when String.length text >= i + String.length target
+         && String.sub text i (String.length target) = target ->
+      let iter = buf#get_iter (`OFFSET i) in
+      buf#place_cursor iter
+  | _ -> ()
+in
+
 	 let l = slm#language name in
 	 if l = None then
 	   log#warning (
