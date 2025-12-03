@@ -29,10 +29,18 @@ let conf_data =
     ~p:(conf#plug "data")
     (F.x "data ressources" [])
 
+(*
 let conf_data_dirs =
   Conf.list
-    ~p:(conf_data#plug "dirs") ~d:["/home/filasez/Programme/filaby/data"]
+    ~p:(conf_data#plug "dirs") ~d:[]
     (F.x "data paths" [])
+
+*)
+
+let conf_data_dirs =
+  let repo_data = Filename.concat (Sys.getenv "HOME") "Programme/filaby/data" in
+  Conf.list ~p:(conf_data#plug "dirs") ~d:[repo_data] (F.x "data paths" [])
+
 
 let conf_bin =
   Conf.void
