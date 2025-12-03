@@ -1,0 +1,17 @@
+Inhalt Originalverzeichnis Laby:
+
+AUTHORS
+build.conf
+COPYRIGHT
+gpl-3.0.txt
+laby
+packaging
+src
+build
+_build-linux-amd64
+data
+INSTALL
+Makefile
+project.conf
+TRANSLATION
+
