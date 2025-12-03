@@ -4,7 +4,7 @@ include project.conf
 PROJECT_ARCHIVE=$(PROJECT_NAME)-$(PROJECT_VERSION)
 
 DESTDIR ?=
-PREFIX ?= $(HOME)/.local
+PREFIX ?= $HOME/.local
 BINDIR ?= $(PREFIX)/bin
 DATADIR ?= $(PREFIX)/share
 
@@ -30,29 +30,23 @@ install:
 		"$(DESTDIR)$(BINDIR)/$(INSTALLED_BIN)"
 
 	# Daten installieren
-	install -d "$(DESTDIR)$(DATADIR)/$(INSTALLED_BIN)/"
-	cp -pr data/* "$(DESTDIR)$(DATADIR)/$(INSTALLED_BIN)/"
+	install -d "$(DESTDIR)$(DATADIR)/laby/"
+	cp -pr data/* "$(DESTDIR)$(DATADIR)/laby/"
 
 	# Icon installieren unter neuem Namen
 	install -Dp --mode=0644 data/tiles/ant-e_f.svg \
-		"$(DESTDIR)$(DATADIR)/icons/hicolor/scalable/apps/$(INSTALLED_BIN).svg"
-
-	# Desktop-Datei dynamisch erzeugen
-	echo "[Desktop Entry]" > /tmp/$(INSTALLED_BIN).desktop
-	echo "Name=Filaby" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Comment=Startet das Filaby-Spiel" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Exec=$(BINDIR)/$(INSTALLED_BIN)" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Icon=$(INSTALLED_BIN)" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Terminal=false" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Type=Application" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Categories=Game;" >> /tmp/$(INSTALLED_BIN).desktop
+		"$(DESTDIR)$(DATADIR)/icons/hicolor/scalable/apps/filaby.svg"
 
 	# Desktop-Datei installieren unter neuem Namen
-	desktop-file-install /tmp/$(INSTALLED_BIN).desktop \
-		--dir="$(DESTDIR)$(DATADIR)/applications"
+	desktop-file-install packaging/laby.desktop \
+		--dir="$(DESTDIR)$(DATADIR)/applications" \
+		--recode-to-utf8 \
+		--set-key=Name:Filaby \
+		--set-key=Exec:$(INSTALLED_BIN) \
+		--set-key=Icon:filaby
 
 	# AppData installieren
-	install -Dp --mode=0644 packaging/$(INSTALLED_BIN).appdata.xml \
+	install -Dp --mode=0644 packaging/laby.appdata.xml \
 		"$(DESTDIR)$(DATADIR)/appdata/$(INSTALLED_BIN).appdata.xml"
 
 dist:
