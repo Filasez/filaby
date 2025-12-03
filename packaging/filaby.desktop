@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Filaby
 Comment=Startet das Filaby-Spiel
-Exec=filaby
+Exec=/home/filasez/.local/bin/filaby
 Icon=filaby
 Terminal=false
 Type=Application

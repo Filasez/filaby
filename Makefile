@@ -38,18 +38,19 @@ install:
 		"$(DESTDIR)$(DATADIR)/icons/hicolor/scalable/apps/$(INSTALLED_BIN).svg"
 
 	# Desktop-Datei dynamisch erzeugen
-	echo "[Desktop Entry]" > /tmp/$(INSTALLED_BIN).desktop
-	echo "Name=Filaby" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Comment=Startet das Filaby-Spiel" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Exec=$(BINDIR)/$(INSTALLED_BIN)" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Icon=$(INSTALLED_BIN)" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Terminal=false" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Type=Application" >> /tmp/$(INSTALLED_BIN).desktop
-	echo "Categories=Game;" >> /tmp/$(INSTALLED_BIN).desktop
+	echo "[Desktop Entry]" > packaging/$(INSTALLED_BIN).desktop
+	echo "Name=Filaby" >> packaging/$(INSTALLED_BIN).desktop
+	echo "Comment=Startet das Filaby-Spiel" >> packaging/$(INSTALLED_BIN).desktop
+	echo "Exec=$(BINDIR)/$(INSTALLED_BIN)" >> packaging/$(INSTALLED_BIN).desktop
+	echo "Icon=$(INSTALLED_BIN)" >> packaging/$(INSTALLED_BIN).desktop
+	echo "Terminal=false" >> packaging/$(INSTALLED_BIN).desktop
+	echo "Type=Application" >> packaging/$(INSTALLED_BIN).desktop
+	echo "Categories=Game;" >> packaging/$(INSTALLED_BIN).desktop
 
 	# Desktop-Datei installieren unter neuem Namen
-	desktop-file-install /tmp/$(INSTALLED_BIN).desktop \
+	desktop-file-install packaging/$(INSTALLED_BIN).desktop \
 		--dir="$(DESTDIR)$(DATADIR)/applications"
+	
 
 	# AppData installieren
 	install -Dp --mode=0644 packaging/$(INSTALLED_BIN).appdata.xml \
