@@ -30,6 +30,9 @@ let hex s =
   let b = int_of_string ("0x" ^ String.sub s 5 2) in
   rgb255 r g b
 
+(*Normale Bodenfarbe: #372f2d
+Bodenfarbe für's Drucken: #665753*)
+let floor_col = hex "#665753"
 
 (*Hilfsfunktion, um Vorder- und Hintergrundfarbe von Widgets zu ändern*)
 (*Beispiel: set_bg_fg window ~bg:(hex "#372f2d") ~fg:`NAME "white"*)
@@ -149,7 +152,7 @@ let conf =
     (F.x "graphic interface configuration" [])
 
 let conf_tilesize =
-  Conf.int ~p:(conf#plug "tile-size") ~d:55
+  Conf.int ~p:(conf#plug "tile-size") ~d:45
     (F.x "size of tiles in pixels" [])
 
 let conf_playback_rate =
@@ -356,7 +359,7 @@ let layout languages =
   
   (* --- Eigene Fensterfarben erstellen mit Lablgtk2 --- *)
   (*Erfundene Bodenfarbe: #372f2d --> RGB: RGB(55,47,45) *)
-	let color_w_bg = hex "#372f2d" in
+	let color_w_bg = floor_col in
 	window#misc#modify_bg [`NORMAL, color_w_bg];
 	window#misc#modify_fg [`NORMAL, `NAME "white"];
 

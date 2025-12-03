@@ -9,22 +9,6 @@
    @author Stéphane Gimenez
 *)
 
-(* print_endline (Sys.getenv "TERM") *)
-
-(* Bewirkt Ausgabe "Term not set" in laby_debug.txt, wenn man Laby über die .desktop-datei startet *)
-(* Bewirkt Ausgabe "xterm-256color" in laby_debug.txt, wenn man Laby über die Konsole startet*)
-
-let () =
-  let oc = open_out "/home/filasez/Programme/ocaml test/laby_debug.txt" in
-  let term = match Sys.getenv_opt "TERM" with
-    | Some v -> v
-    | None -> "TERM not set"
-  in
-  output_string oc term;
-  close_out oc
-
-
-
 
 let conf_tags =
   Conf.void (F.x "theme" [])

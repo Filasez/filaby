@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=filaby
+Comment=Startet das filaby-Spiel
+Exec=/home/filasez/Programme/filaby/filaby
+Icon=/home/filasez/Programme/filaby/data/tiles/ant-e.svg
+Terminal=false
+Type=Application
+Categories=Game;

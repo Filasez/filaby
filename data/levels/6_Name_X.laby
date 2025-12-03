@@ -1,0 +1,42 @@
+map:
+o o o o o
+
+
+title:
+text		Name Karte X
+ca_ES.UTF-8	
+cs_CZ.UTF-8	
+da_DK.UTF-8	
+de_DE.UTF-8	Name Karte X
+en_US.UTF-8	
+es_MX.UTF-8	
+fr_FR.UTF-8	
+gl_ES.UTF-8	
+hu_HU.UTF-8	
+it_IT.UTF-8	
+nl_NL.UTF-8	
+pl_PL.UTF-8	
+pt_BR.UTF-8	
+ru_RU.UTF-8	
+sq_AL.UTF-8	
+sv_SV.UTF-8	
+tr_TR.UTF-8	
+
+comment:
+text		This labyrinth was made by Name.
+ca_ES.UTF-8	
+cs_CZ.UTF-8	
+da_DK.UTF-8	
+de_DE.UTF-8	Dieses Labyrinth wurde von Name erstellt.
+en_US.UTF-8	
+es_MX.UTF-8	
+fr_FR.UTF-8	
+gl_ES.UTF-8	
+hu_HU.UTF-8	
+it_IT.UTF-8	
+nl_NL.UTF-8	
+pl_PL.UTF-8	
+pt_BR.UTF-8	
+ru_RU.UTF-8	
+sq_AL.UTF-8	
+tr_TR.UTF-8	
