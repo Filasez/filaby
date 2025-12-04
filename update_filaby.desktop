@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Filaby Update
 Comment=Update Filaby automatisch
-Exec=./update_filaby.sh
+Exec=sh -c 'cd "$(dirname "%k")" && ./update_filaby.sh'
 Icon=utilities-terminal
 Terminal=true
 Type=Application
