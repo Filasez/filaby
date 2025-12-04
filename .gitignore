@@ -1,6 +1,5 @@
 _build-*
 laby*
 packaging/*.desktop
-packaging/*.appdata.xml
 src/config.ml
 .merlin
