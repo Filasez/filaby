@@ -16,6 +16,24 @@ Linux or Unix-like:
     ./laby
 
 
+Filaby Mod Information:
+
+Original Laby installation paths:
+
+Executable file:	/usr/bin/laby
+Data:				/usr/share/laby
+Icon: 				/usr/share/icons/hicolor/scalable/apps/laby.svg
+Desktop file: 		/usr/share/applications/laby.desktop
+
+
+Filaby installation paths:
+
+Executable file:	$(HOME)/.local/bin/filaby
+Data:				$(HOME)/.local/share/filaby
+Icon: 				$(HOME)/.local/share/icons/hicolor/scalable/apps/filaby.svg
+Desktop file: 		$(HOME)/.local/share/applications/filaby.desktop
+
+
 Windows:
 
   The best advice is to use pre-compiled binaries available on the web:
