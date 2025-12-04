@@ -780,8 +780,8 @@ let display_gtk ressources =
   let exit_play () =
     c.main_hpaned#misc#hide ();
     c.menu_home#misc#hide ();
-    (* c.menu_save#misc#hide ();
-    c.menu_open#misc#hide (); *)
+    c.menu_save#misc#hide ();
+    c.menu_open#misc#hide ();
     c.menu_level#misc#hide ();
     let callback () =
       start_animation := State.random_walk !start_animation;
