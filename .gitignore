@@ -1,5 +1,6 @@
 _build-*
-laby*
+laby
+laby.native
 packaging/*.desktop
 src/config.ml
 .merlin
