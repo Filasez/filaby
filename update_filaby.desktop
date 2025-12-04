@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Filaby Update
+Comment=Update Filaby automatisch
+Exec=%k/update_filaby.sh
+Icon=utilities-terminal
+Terminal=true
+Type=Application
