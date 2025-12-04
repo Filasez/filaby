@@ -11,12 +11,6 @@ open Gdk
 open GWindow
 
 
-(* Hilfsfunktion zum erstellen fettgeschriebener Labels*)
-let bold_label text packing =
-  let lbl = GMisc.label ~text ~packing () in
-  let font_desc = GPango.font_description_from_string "Sans Bold 10" in
-  lbl#misc#modify_font font_desc;
-  lbl
 
 
 (* Skaliert 8-Bit-Farbwerte auf 16-Bit für RGB *)
@@ -30,6 +24,7 @@ let hex s =
   let b = int_of_string ("0x" ^ String.sub s 5 2) in
   rgb255 r g b
 
+
 (*Normale Bodenfarbe: #372f2d
 Bodenfarbe für's Drucken: #665753*)
 let floor_col = hex "#665753"
@@ -39,6 +34,15 @@ let floor_col = hex "#665753"
 let set_bg_fg widget ~bg ~fg =
   widget#misc#modify_bg [`NORMAL, bg];
   widget#misc#modify_fg [`NORMAL, fg]
+
+(* Hilfsfunktion zum erstellen fettgeschriebener Labels*)
+let bold_label text packing =
+  let lbl = GMisc.label ~text ~packing () in
+  let font_desc = GPango.font_description_from_string "Sans Bold 10" in
+  lbl#misc#modify_font font_desc;
+  lbl
+
+
 
 (* === Hilfsfunktion: Standard-Dokumenteordner finden === *)
 let get_default_documents_folder () =
@@ -212,6 +216,8 @@ type controls =
       (* left_paned: GPack.paned; *)
       menu_quit: GMenu.menu_item;
       menu_home: GMenu.menu_item;
+      menu_open: GMenu.menu_item;
+      menu_save: GMenu.menu_item;
       menu_level: GMenu.menu_item;
       menu_levels: GMenu.menu;
       button_start: GButton.button;
@@ -584,11 +590,13 @@ let layout languages =
   (*Leider wird die farbige Umrandung markierten Textes (Highlight-Farbe) so nicht mehr angezeigt.*)
 
   (*Die Menu-Items für's Speichern und Öffnen sind hier definiert, da es um den Inhalt des Programmierfensters geht.*)
-  let save_item = GMenu.menu_item ~label:"Save" ~packing:sub_main#append () in
-  save_item#connect#activate ~callback:(fun () -> save_file view_prog);
+  let menu_save = GMenu.menu_item ~label:"Save" ~packing:sub_main#append () in
+  menu_save#connect#activate ~callback:(fun () -> save_file view_prog);
+  menu_save#misc#hide ();
 
-  let open_item = GMenu.menu_item ~label:"Open" ~packing:sub_main#append () in
-  open_item#connect#activate ~callback:(fun () -> open_file view_prog);
+  let menu_open = GMenu.menu_item ~label:"Open" ~packing:sub_main#append () in
+  menu_open#connect#activate ~callback:(fun () -> open_file view_prog);
+  menu_open#misc#hide ();
 
 
   
@@ -660,6 +668,7 @@ let layout languages =
     start_image = start_image;
     main_hpaned = hpaned;
     menu_quit = menu_quit; menu_home = menu_home;
+    menu_open = menu_open; menu_save = menu_save;
     menu_level = menu_level; menu_levels = menu_levels;
     button_start = button_start;
     button_prev = button_prev; button_next = button_next;
@@ -762,6 +771,8 @@ let display_gtk ressources =
     end;
     rid := None;
     c.menu_home#misc#show ();
+    c.menu_save#misc#show ();
+    c.menu_open#misc#show ();
     c.menu_level#misc#show ();
     c.main_hpaned#misc#show ()
 
@@ -769,6 +780,8 @@ let display_gtk ressources =
   let exit_play () =
     c.main_hpaned#misc#hide ();
     c.menu_home#misc#hide ();
+    (* c.menu_save#misc#hide ();
+    c.menu_open#misc#hide (); *)
     c.menu_level#misc#hide ();
     let callback () =
       start_animation := State.random_walk !start_animation;
