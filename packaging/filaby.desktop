@@ -2,7 +2,7 @@
 Name=Filaby
 Comment=Startet das Filaby-Spiel
 Exec=/home/filasez/.local/bin/filaby
-Icon=filaby
+Icon=/home/filasez/.local/share/icons/hicolor/scalable/apps/filaby.svg
 Terminal=false
 Type=Application
 Categories=Game;

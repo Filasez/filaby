@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg id="svg2" xmlns="http://www.w3.org/2000/svg" height="32" width="32" version="1.0">
+<svg id="svg2" xmlns="http://www.w3.org/2000/svg" height="32" width="32" version="1.0" viewBox="0 0 32 32">
  <g id="layer1" stroke="#000" stroke-width="1px" stroke-linejoin="bevel" stroke-linecap="butt" fill="none" transform="matrix(1,0,0,1,0,0)">
   <path id="path1" d="M27.054,13.741c0,3.329-2.458,6.028-5.492,6.028-3.033,0-5.491-2.699-5.491-6.028s2.458-6.0283,5.491-6.0283c3.034,0,5.492,2.6993,5.492,6.0283z" transform="translate(-11.78571,2.589285)" fill="#808080"/>
   <path id="path2" d="M24.018,6.6429l-3.75,2.6785-1.697,3.9286"/>
@@ -17,6 +17,6 @@
   <path id="path13" stroke-linejoin="miter" d="M28.571,16.821l-1.25,0.358"/>
   
   <!-- Neues Text-Element: F auf dem Rücken der Ameise -->
-  <text x="9.0" y="18.50" font-family="Arial" font-size="8" fill="#000" text-anchor="middle" alignment-baseline="middle">F</text>
+  <text x="9.0" y="19" font-family="Arial" font-size="8" fill="#000" text-anchor="middle" alignment-baseline="middle">F</text>
  </g>
 </svg>

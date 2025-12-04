@@ -34,7 +34,7 @@ install:
 	cp -pr data/* "$(DESTDIR)$(DATADIR)/$(INSTALLED_BIN)/"
 
 	# Icon installieren unter neuem Namen
-	install -Dp --mode=0644 data/tiles/ant-e_f.svg \
+	install -Dp --mode=0644 data/tiles/ant_f-e.svg \
 		"$(DESTDIR)$(DATADIR)/icons/hicolor/scalable/apps/$(INSTALLED_BIN).svg"
 
 	# Desktop-Datei dynamisch erzeugen
@@ -42,7 +42,8 @@ install:
 	echo "Name=Filaby" >> packaging/$(INSTALLED_BIN).desktop
 	echo "Comment=Startet das Filaby-Spiel" >> packaging/$(INSTALLED_BIN).desktop
 	echo "Exec=$(BINDIR)/$(INSTALLED_BIN)" >> packaging/$(INSTALLED_BIN).desktop
-	echo "Icon=$(INSTALLED_BIN)" >> packaging/$(INSTALLED_BIN).desktop
+	echo "Icon=$(DATADIR)/icons/hicolor/scalable/apps/$(INSTALLED_BIN).svg" \
+    >> packaging/$(INSTALLED_BIN).desktop
 	echo "Terminal=false" >> packaging/$(INSTALLED_BIN).desktop
 	echo "Type=Application" >> packaging/$(INSTALLED_BIN).desktop
 	echo "Categories=Game;" >> packaging/$(INSTALLED_BIN).desktop

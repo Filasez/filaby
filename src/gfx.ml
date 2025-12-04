@@ -288,10 +288,10 @@ let gtk_init () =
     web_p = pix "web";
     nrock_p = pix "nrock";
     nweb_p = pix "nweb";
-    ant_n_p = pix "ant-n";
-    ant_e_p = pix "ant-e";
-    ant_s_p = pix "ant-s";
-    ant_w_p = pix "ant-w";
+    ant_n_p = pix "ant_f-n";
+    ant_e_p = pix "ant_f-e";
+    ant_s_p = pix "ant_f-s";
+    ant_w_p = pix "ant_f-w";
   }
 
 let draw_state state ressources (pixbuf : GdkPixbuf.pixbuf) =
@@ -341,7 +341,7 @@ let label_txt text packing =
 
 let label_menu = F.x "Menu" []
 let label_level = F.x "Level" []
-let label_welcome = F.x "Welcome to laby, a programming game." []
+let label_welcome = F.x "Welcome to laby, a programing game." []
 let label_language = F.x "Language:" []
 let label_prog = F.x "Program:" []
 let label_mesg = F.x "Messages:" []
