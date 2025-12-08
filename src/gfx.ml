@@ -447,8 +447,8 @@ let layout languages =
 
   (* Game screen *)
   let hpaned = GPack.paned `HORIZONTAL ~packing:main_vbox#add () in
-  let tile_size = max 5 conf_tilesize#get in
-  (* hpaned#set_position (10 + 550 * tile_size / 40); *)
+  (* let tile_size = max 5 conf_tilesize#get in
+  hpaned#set_position (10 + 550 * tile_size / 40); *)
   hpaned#set_position (Gdk.Screen.width ()*1/2);
 
   let left_paned = GPack.paned `VERTICAL ~packing:hpaned#add () in
@@ -684,6 +684,7 @@ let layout languages =
     view_title = view_title; view_comment = view_comment;
   }
 
+
 let make_pixbuf tile_size level =
   let sizex, sizey = Level.size level in
   let width, height = tile_size * (1 + sizex), tile_size * (1 + sizey) in
@@ -692,8 +693,7 @@ let make_pixbuf tile_size level =
   GdkPixbuf.create ~width ~height ~has_alpha:true ()
 
 
-let display_gtk ressources =
-
+let display_gtk (ressources : ressources ref) =
   let amods = Mod.pool () in
   let mods = List.filter (fun x -> x#check) amods in
   let language_list =
@@ -712,7 +712,7 @@ let display_gtk ressources =
 
   let level_load name =
     let l = Level.load (Res.get ["levels"; name]) in
-    c.map_image#set_pixbuf (make_pixbuf ressources.size l); l
+    c.map_image#set_pixbuf (make_pixbuf (!ressources).size l); l
   in
   let syntaxd = Res.get ["syntax"] in
   let add_search_path m l = m#set_search_path (l @ m#search_path) in
@@ -753,7 +753,7 @@ let display_gtk ressources =
   let draw image state =
     let p : GdkPixbuf.pixbuf = image#pixbuf in
     GdkPixbuf.fill p 0l;
-    draw_state state ressources p;
+    draw_state state !ressources p;
     image#set_pixbuf p
   in
 
@@ -879,6 +879,40 @@ let display_gtk ressources =
 	let l = level_load name in
 	c.view_title#set_text (Level.title l);
 	c.view_comment#set_text (Level.comment l);
+
+  (* tile_size abhängig vom Level berechnen *)
+  let avail_w = Gdk.Screen.width () / 2 in
+  let avail_h = Gdk.Screen.height () * 7 / 12 in
+  let sizex, sizey = Level.size l in
+  let tile_size = max 5 (min (avail_w / (sizex+1)) (avail_h / (sizey+1))) in
+
+      (* Pixbufs neu laden *)
+      let pix p =
+        let file = Res.get ["tiles"; p ^ ".svg"] in
+        try GdkPixbuf.from_file_at_size file tile_size tile_size
+        with GdkPixbuf.GdkPixbufError(GdkPixbuf.ERROR_UNKNOWN_TYPE, _) ->
+          let file = Res.get ["tiles"; p ^ ".png"] in
+          GdkPixbuf.from_file_at_size file tile_size tile_size
+      in
+
+      let new_ressources = {
+        size = tile_size;
+        void_p = pix "void";
+        exit_p = pix "exit";
+        wall_p = pix "wall";
+        rock_p = pix "rock";
+        web_p = pix "web";
+        nrock_p = pix "nrock";
+        nweb_p = pix "nweb";
+        ant_n_p = pix "ant_f-n";
+        ant_e_p = pix "ant_f-e";
+        ant_s_p = pix "ant_f-s";
+        ant_w_p = pix "ant_f-w";
+      } in
+
+    (* Die globale Referenz aktualisieren *)
+    ressources := new_ressources;
+
 	command#chg_level l;
 	clear ()
     | false -> ()
@@ -949,24 +983,34 @@ let display_gtk ressources =
   c.window#show ();
 
   
-
+  c.start_image#set_pixbuf (make_pixbuf (!ressources).size Level.dummy);
   if List.mem "0.laby" levels_list
   then newlevel "0.laby"
   else if levels_list <> [] then newlevel (List.hd levels_list);
-  c.start_image#set_pixbuf (make_pixbuf ressources.size Level.dummy);
+
   draw c.start_image (!start_animation);
   ignore (GMain.Main.main ())
 
 let run_gtk () =
-  let ressources =
+  (* let ressources =
     begin try gtk_init () with
     | Gtk.Error m ->
 	raise (
 	  Error (
 	    F.x "gtk error: <error>" ["error", F.q (F.string m)]
 	  )
-	)
-    end
+	) *)
+  let ressources = ref (
+  try gtk_init () with
+    | Gtk.Error m ->
+        raise (
+          Error (
+            F.x "gtk error: <error>" ["error", F.q (F.string m)]
+          )
+        )
+  )
+
+    (* end *)
   in
   display_gtk ressources
 
