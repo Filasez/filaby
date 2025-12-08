@@ -448,7 +448,8 @@ let layout languages =
   (* Game screen *)
   let hpaned = GPack.paned `HORIZONTAL ~packing:main_vbox#add () in
   let tile_size = max 5 conf_tilesize#get in
-  hpaned#set_position (10 + 550 * tile_size / 40);
+  (* hpaned#set_position (10 + 550 * tile_size / 40); *)
+  hpaned#set_position (Gdk.Screen.width ()*1/2);
 
   let left_paned = GPack.paned `VERTICAL ~packing:hpaned#add () in
   (* let screen_height = Gdk.Screen.height () in *)
