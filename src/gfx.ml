@@ -712,6 +712,40 @@ let display_gtk (ressources : ressources ref) =
 
   let level_load name =
     let l = Level.load (Res.get ["levels"; name]) in
+
+  (* tile_size abhängig vom Level berechnen *)
+  let avail_w = Gdk.Screen.width () / 2 in
+  let avail_h = Gdk.Screen.height () * 7 / 12 in
+  let sizex, sizey = Level.size l in
+  let tile_size = max 5 (min (avail_w / (sizex+1)) (avail_h / (sizey+1))) in
+
+      (* Pixbufs neu laden *)
+      let pix p =
+        let file = Res.get ["tiles"; p ^ ".svg"] in
+        try GdkPixbuf.from_file_at_size file tile_size tile_size
+        with GdkPixbuf.GdkPixbufError(GdkPixbuf.ERROR_UNKNOWN_TYPE, _) ->
+          let file = Res.get ["tiles"; p ^ ".png"] in
+          GdkPixbuf.from_file_at_size file tile_size tile_size
+      in
+
+      let new_ressources = {
+        size = tile_size;
+        void_p = pix "void";
+        exit_p = pix "exit";
+        wall_p = pix "wall";
+        rock_p = pix "rock";
+        web_p = pix "web";
+        nrock_p = pix "nrock";
+        nweb_p = pix "nweb";
+        ant_n_p = pix "ant_f-n";
+        ant_e_p = pix "ant_f-e";
+        ant_s_p = pix "ant_f-s";
+        ant_w_p = pix "ant_f-w";
+      } in
+
+    (* Die globale Referenz aktualisieren *)
+    ressources := new_ressources;
+
     c.map_image#set_pixbuf (make_pixbuf (!ressources).size l); l
   in
   let syntaxd = Res.get ["syntax"] in
@@ -880,38 +914,7 @@ let display_gtk (ressources : ressources ref) =
 	c.view_title#set_text (Level.title l);
 	c.view_comment#set_text (Level.comment l);
 
-  (* tile_size abhängig vom Level berechnen *)
-  let avail_w = Gdk.Screen.width () / 2 in
-  let avail_h = Gdk.Screen.height () * 7 / 12 in
-  let sizex, sizey = Level.size l in
-  let tile_size = max 5 (min (avail_w / (sizex+1)) (avail_h / (sizey+1))) in
 
-      (* Pixbufs neu laden *)
-      let pix p =
-        let file = Res.get ["tiles"; p ^ ".svg"] in
-        try GdkPixbuf.from_file_at_size file tile_size tile_size
-        with GdkPixbuf.GdkPixbufError(GdkPixbuf.ERROR_UNKNOWN_TYPE, _) ->
-          let file = Res.get ["tiles"; p ^ ".png"] in
-          GdkPixbuf.from_file_at_size file tile_size tile_size
-      in
-
-      let new_ressources = {
-        size = tile_size;
-        void_p = pix "void";
-        exit_p = pix "exit";
-        wall_p = pix "wall";
-        rock_p = pix "rock";
-        web_p = pix "web";
-        nrock_p = pix "nrock";
-        nweb_p = pix "nweb";
-        ant_n_p = pix "ant_f-n";
-        ant_e_p = pix "ant_f-e";
-        ant_s_p = pix "ant_f-s";
-        ant_w_p = pix "ant_f-w";
-      } in
-
-    (* Die globale Referenz aktualisieren *)
-    ressources := new_ressources;
 
 	command#chg_level l;
 	clear ()
